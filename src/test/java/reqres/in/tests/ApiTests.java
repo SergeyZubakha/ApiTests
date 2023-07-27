@@ -1,17 +1,24 @@
-package reqres.in;
+package reqres.in.tests;
 
 import org.junit.jupiter.api.Test;
+import reqres.in.models.LoginBodyLombokModel;
+import reqres.in.models.LoginBodyPojoModel;
+import reqres.in.models.LoginResponsePojoModel;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ApiTests extends TestBase {
     @Test
-    void successfulLoginTest() {
-        String authData = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
+    void successfulLoginWithPojoTest() {
+      //  String authData = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
+        LoginBodyPojoModel authData = new LoginBodyPojoModel();
+        authData.setEmail("eve.holt@reqres.in");
+        authData.setPassword("cityslicka");
 
-        given()
+        LoginResponsePojoModel loginResponse = given()
                 .log().uri()
                 .log().method()
                 .log().body()
@@ -23,7 +30,34 @@ public class ApiTests extends TestBase {
                 .log().status()
                 .log().body()
                 .statusCode(200)
-                .body("token", is("QpwL5tke4Pnpja7X4"));
+                .extract().as(LoginResponsePojoModel.class);
+
+        assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken());
+                //.body("token", is("QpwL5tke4Pnpja7X4"));
+    }
+    @Test
+    void successfulLoginWithLombokTest() {
+        //  String authData = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
+        LoginBodyLombokModel authData = new LoginBodyLombokModel();
+        authData.setEmail("eve.holt@reqres.in");
+        authData.setPassword("cityslicka");
+
+        LoginResponsePojoModel loginResponse = given()
+                .log().uri()
+                .log().method()
+                .log().body()
+                .contentType(JSON)
+                .body(authData)
+                .when()
+                .post("/login")
+                .then()
+                .log().status()
+                .log().body()
+                .statusCode(200)
+                .extract().as(LoginResponsePojoModel.class);
+
+        assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken());
+        //.body("token", is("QpwL5tke4Pnpja7X4"));
     }
 
     @Test

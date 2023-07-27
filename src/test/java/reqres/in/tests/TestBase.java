@@ -1,4 +1,4 @@
-package reqres.in;
+package reqres.in.tests;
 
 import org.junit.jupiter.api.BeforeAll;
 import static io.restassured.RestAssured.baseURI;
