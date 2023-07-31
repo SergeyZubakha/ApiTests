@@ -1,5 +1,6 @@
 package reqres.in.tests;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import reqres.in.models.*;
 
@@ -11,6 +12,7 @@ import static reqres.in.specs.Specifications.*;
 public class ApiTests extends TestBase {
 
     @Test
+    @Tag("ApiTests")
     void postSuccessfulLoginTest() {
 
         LoginBodyLombokModel authData = new LoginBodyLombokModel();
@@ -32,6 +34,7 @@ public class ApiTests extends TestBase {
     }
 
     @Test
+    @Tag("ApiTests")
     void getListUsersTest() {
 
         GetListUsersResponseModel listUsers = step("Make request", () ->
@@ -51,6 +54,7 @@ public class ApiTests extends TestBase {
     }
 
     @Test
+    @Tag("ApiTests")
     void getSingleUserTest() {
 
         GetUser2ResponseModel user2 = step("Make request", () ->
@@ -74,6 +78,7 @@ public class ApiTests extends TestBase {
     }
 
     @Test
+    @Tag("ApiTests")
     void postCreateUserTest() {
         PostCreateBodyModel newUser = new PostCreateBodyModel();
         newUser.setName("morpheus");
@@ -97,6 +102,7 @@ public class ApiTests extends TestBase {
     }
 
     @Test
+    @Tag("ApiTests")
     void postUnsuccessfulLoginTest() {
 
         PostUnsuccessfulLoginBodyModel postUnsuccessfulLoginBodyModel = new PostUnsuccessfulLoginBodyModel();
