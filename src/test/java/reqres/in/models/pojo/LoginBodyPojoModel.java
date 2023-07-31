@@ -1,4 +1,4 @@
-package reqres.in.models;
+package reqres.in.models.pojo;
 
 public class LoginBodyPojoModel {
     String email, password;

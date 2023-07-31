@@ -1,133 +1,118 @@
 package reqres.in.tests;
 
 import org.junit.jupiter.api.Test;
-import reqres.in.models.LoginBodyLombokModel;
-import reqres.in.models.LoginBodyPojoModel;
-import reqres.in.models.LoginResponsePojoModel;
+import reqres.in.models.*;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static reqres.in.specs.Specifications.*;
 
 public class ApiTests extends TestBase {
-    @Test
-    void successfulLoginWithPojoTest() {
-      //  String authData = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
-        LoginBodyPojoModel authData = new LoginBodyPojoModel();
-        authData.setEmail("eve.holt@reqres.in");
-        authData.setPassword("cityslicka");
 
-        LoginResponsePojoModel loginResponse = given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
-                .body(authData)
-                .when()
-                .post("/login")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(LoginResponsePojoModel.class);
-
-        assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken());
-                //.body("token", is("QpwL5tke4Pnpja7X4"));
-    }
     @Test
-    void successfulLoginWithLombokTest() {
-        //  String authData = "{ \"email\": \"eve.holt@reqres.in\", \"password\": \"cityslicka\" }"; // BAD PRACTICE
+    void postSuccessfulLoginTest() {
+
         LoginBodyLombokModel authData = new LoginBodyLombokModel();
         authData.setEmail("eve.holt@reqres.in");
         authData.setPassword("cityslicka");
 
-        LoginResponsePojoModel loginResponse = given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
-                .body(authData)
-                .when()
-                .post("/login")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(LoginResponsePojoModel.class);
+        LoginResponseLombokModel loginResponse = step("Make request", () ->
+                given(loginRequestSpec)
+                        .body(authData)
+                        .when()
+                        .post("/login")
+                        .then()
+                        .spec(loginResponseSpec)
+                        .extract().as(LoginResponseLombokModel.class));
 
-        assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken());
-        //.body("token", is("QpwL5tke4Pnpja7X4"));
+        step("Check response", () ->
+                assertEquals("QpwL5tke4Pnpja7X4", loginResponse.getToken()));
+
     }
 
     @Test
     void getListUsersTest() {
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .when()
-                .get("/users?page=2")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("total", is(12));
+
+        GetListUsersResponseModel listUsers = step("Make request", () ->
+                given(getUsersRequestSpec)
+                        .when()
+                        .get("/users?page=2")
+                        .then()
+                        .spec(getUsersResponseSpec)
+                        .extract().as(GetListUsersResponseModel.class));
+
+        step("Check response", () -> {
+            assertEquals(12, listUsers.getTotal());
+            assertEquals("https://reqres.in/#support-heading", listUsers.getSupport().getUrl());
+            assertEquals(7, listUsers.getData().get(0).getId());
+        });
+
     }
 
     @Test
     void getSingleUserTest() {
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .when()
-                .get("/users/2")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .body("data.id", is(2))
-                .body("data.email", is("janet.weaver@reqres.in"))
-                .body("data.first_name", is("Janet"))
-                .body("data.last_name", is("Weaver"));
+
+        GetUser2ResponseModel user2 = step("Make request", () ->
+                given(getUser2RequestSpec)
+                        .when()
+                        .get("/users/2")
+                        .then()
+                        .spec(getUser2ResponseSpec)
+                        .extract().as(GetUser2ResponseModel.class));
+
+        step("Check response", () -> {
+            assertEquals(2, user2.getData().getId());
+            assertEquals("janet.weaver@reqres.in", user2.getData().getEmail());
+            assertEquals("Janet", user2.getData().getFirst_name());
+            assertEquals("Weaver", user2.getData().getLast_name());
+            assertEquals("https://reqres.in/img/faces/2-image.jpg", user2.getData().getAvatar());
+            assertEquals("https://reqres.in/#support-heading", user2.getSupport().getUrl());
+            assertEquals("To keep ReqRes free, contributions towards server costs are appreciated!", user2.getSupport().getText());
+        });
+
     }
 
     @Test
     void postCreateUserTest() {
-        String user = "{ \"name\": \"morpheus\",\n" +
-                " \"job\": \"leader\" }"; // BAD PRACTICE
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
-                .body(user)
-                .when()
-                .post("/users")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .body("name", is("morpheus"))
-                .body("job", is("leader"));
+        PostCreateBodyModel newUser = new PostCreateBodyModel();
+        newUser.setName("morpheus");
+        newUser.setJob("leader");
+
+        PostCreateResponseModel postCreateResponseModel = step("Make request", () ->
+
+                given(postCreateRequestSpec)
+                        .body(newUser)
+                        .when()
+                        .post("/users")
+                        .then()
+                        .spec(postCreateResponseSpec)
+                        .extract().as(PostCreateResponseModel.class));
+
+        step("Check response", () -> {
+                    assertEquals("morpheus", postCreateResponseModel.getName());
+                    assertEquals("leader", postCreateResponseModel.getJob());
+                });
+
     }
 
     @Test
-    void unsuccessfulLoginTest() {
-        String authData = "{\"email\": \"peter@klaven\"}";
-        given()
-                .log().uri()
-                .log().method()
-                .log().body()
-                .contentType(JSON)
-                .body(authData)
-                .when()
-                .post("/login")
-                .then()
-                .log().status()
-                .log().body()
-                .statusCode(400)
-                .body("error", is("Missing password"));
+    void postUnsuccessfulLoginTest() {
+
+        PostUnsuccessfulLoginBodyModel postUnsuccessfulLoginBodyModel = new PostUnsuccessfulLoginBodyModel();
+        postUnsuccessfulLoginBodyModel.setEmail("peter@klaven");
+
+        PostUnsuccessfulLoginResponseModel postUnsuccessfulLoginResponseModel = step("Make request", () ->
+                given(postUnsuccessfulLoginRequestSpec)
+                        .body(postUnsuccessfulLoginBodyModel)
+                        .when()
+                        .post("/login")
+                        .then()
+                        .spec(postUnsuccessfulLoginResponseSpec)
+                        .extract().as(PostUnsuccessfulLoginResponseModel.class));
+
+        step("Check response", () ->
+                assertEquals("Missing password", postUnsuccessfulLoginResponseModel.getError()));
     }
+
 }
